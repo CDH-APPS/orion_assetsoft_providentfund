@@ -219,6 +219,16 @@
 	'as' => 'NewPayment',
 	));
 
+	Route::get('/ApprovePayment', array(
+	'uses' => '\App\Http\Controllers\AccountsController@approvepayment',
+	'as' => 'ApprovePayment',
+	));
+
+	Route::get('/DisapprovePayment', array(
+	'uses' => '\App\Http\Controllers\AccountsController@disapprovepayment',
+	'as' => 'DisapprovePayment',
+	));
+
 	Route::get('/BankAccounts', array(
 	'uses' => '\App\Http\Controllers\AccountsController@bankaccounts',
 	'as' => 'BankAccounts',
@@ -249,10 +259,21 @@
 	'as' => 'EidtBankTransaction',
 	));
 
+	Route::get('/AccountsPendingApprovals', array(
+	'uses' => '\App\Http\Controllers\AccountsController@pendingapprovals',
+	'as' => 'AccountsPendingApprovals',
+	));
 
-	
 
-	
+	Route::get('/GetBankAcctDetails', array(
+	'uses' => '\App\Http\Controllers\AccountsController@getbankacctdetails',
+	'as' => 'GetBankAcctDetails',
+	));
+
+	Route::get('/ApproveTrans', array(
+	'uses' => '\App\Http\Controllers\AccountsController@approvetrans',
+	'as' => 'ApproveTrans',
+	));
 	
 
 /* End Accounts Routess */

@@ -28,7 +28,7 @@
                                 </div>
                                 <div class="x_content">
 
-                                     @if(Auth::user()->user_role_id == 6)
+                                     @if(true)
                                          <div class="x_panel">
                                          <div class="pull-left"><h4>Manage Investments</h4></div>   
                                          <div class="btn-group pull-right">
@@ -55,7 +55,7 @@
                                     <table id="example" class="table table-striped responsive-utilities jambo_table">
                                         <thead>
                                             <tr class="headings">    
-                                                <th>Account No</th>
+                                         
                                                 <th>Value Date</th>
                                                 <th>Share Code </th>
                                                 <th>Invested Amount</th>
@@ -64,6 +64,7 @@
                                                 <th>Current Price</th>
                                                 <th>Current Balance</th>
                                                 <th>Gain/Loss</th>
+                                                <th></th>
                                                 
                                             </tr>
                                         </thead>
@@ -71,7 +72,6 @@
                                         <tbody>
                                             @foreach($accts as $accounts)
                                             <tr class="even pointer">
-                                                <td class=" ">{{ $accounts->Investment_Id }}</td>
                                                 <td class=" ">{{ $accounts->Value_Date }}</td>
                                                 <td class=" ">{{ $accounts->Share_Code }}</td>
                                                 <td class=" ">{{ number_format($accounts->Amount_Paid,2) }}</td>
@@ -79,7 +79,20 @@
                                                 <td class=" ">{{ number_format($accounts->No_Of_Shares,2) }}</td> 
                                                 <td class=" ">{{ number_format($accounts->Current_Price,4) }}</td> 
                                                 <td class=" ">{{ number_format($accounts->Current_Balance,2) }}</td> 
-                                                <td class=" ">{{ number_format($accounts->Gain_Loss,2) }}</td>                                                                                  
+                                                <td class=" ">{{ number_format($accounts->Gain_Loss,2) }}</td>    
+                                                <td class=" ">
+                                                @if($accounts->status == 0)
+                                                <a style="width:90px" class="btn btn-danger btn-xs" href="">
+                                                   Pending
+                                                </a>
+                                                @elseif($accounts->status == '1')
+                                                <a style="width:90px" class="btn btn-success btn-xs" href="">
+                                                    Active
+                                                </a>
+                                                @endif
+
+
+                                                </td>                                                                              
                                             </tr>
                                             @endforeach
                                             

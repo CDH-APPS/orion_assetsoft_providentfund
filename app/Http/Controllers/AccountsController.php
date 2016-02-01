@@ -42,7 +42,17 @@ class AccountsController extends Controller
 
     public function recievepayment()
     {
-        $payments = Payments::all();
+        $payments = DB::table('payment_recieved')
+    			 ->join('bank_accounts','bank_accounts.account_no','=','payment_recieved.bank_account_no')
+                 ->selectRaw('bank_accounts.account_name,
+                 			  payment_recieved.Id,
+                              payment_recieved.date_recieved,
+                              payment_recieved.contribution_period,
+                              payment_recieved.amount_recieved,
+                              payment_recieved.id,
+                              payment_recieved.status')
+                 ->get();
+
         $paycounter = Payments::count();
         $bankers = Banks::all();
         $bankaccounts = BankAccounts::all();
@@ -53,6 +63,112 @@ class AccountsController extends Controller
         ->with('bankaccounts',$bankaccounts)
         ->with('bankers',$bankers);
             
+    }
+
+
+    public function getbankacctdetails()
+    {
+    	$bankaccounts = DB::table('bank_accounts')
+				        ->join('bankers','bankers.id','=','bank_accounts.bank_id')
+				        ->select('bank_accounts.bank_id as bank_id','bank_accounts.id as id','bank_accounts.account_no as account_no','bank_accounts.account_name as account_name','bankers.name as bank_name','bank_accounts.account_type as account_type','bank_accounts.status as status',
+				        DB::raw('(select ifnull(sum(amount),0) from  bank_transactions where trans_type = 1 and bank_transactions.bank_account_id = bank_accounts.account_no) as deposits'),
+				        DB::raw('(select ifnull(sum(amount),0) from  bank_transactions where trans_type = 0 and bank_transactions.bank_account_id = bank_accounts.account_no) as withdrawals'),
+				        DB::raw('(select (deposits - withdrawals)) as ini_bal'))
+				        ->where('bank_accounts.id','=',Input::get('bankaccountno'))
+				        ->first();
+
+
+		return Response::json($bankaccounts);
+    }
+
+
+    public function approvetrans()
+    {
+
+    	$rules = array(
+                      'transdate' => 'required',
+                      'amount' => 'required',
+                      'bankaccountno' => 'required',
+                      'paymentmethod' => 'required',
+                      'chequeno' => 'required',
+                      'bankid' => 'required',
+                      'transtype' => 'required',
+                      'transid' => 'required'
+                      );
+
+        $validation = Validator::make(Input::all(),$rules);
+
+        if($validation->fails())
+        {
+           
+            $this->recievepaymentredirect($validation->errors()->first());
+            
+        }
+        else
+        {
+        	
+        		
+			           
+
+			            if(true)
+			            {
+			            	
+			              		$ini = array('OK'=>'OK');
+			                    return  Response::json($ini);
+			               
+			            }
+			            else
+			            {               
+			            		$ini = array('No Data'=>'Payment was not saved.');
+			                    return  Response::json($ini);
+			            }    
+        }
+
+    }
+
+    public function pendingapprovals()
+    {
+    	$bankaccounts = DB::table('bank_accounts')
+				        ->join('bankers','bankers.id','=','bank_accounts.bank_id')
+				        ->select('bank_accounts.bank_id as bank_id','bank_accounts.id as id','bank_accounts.account_no as account_no','bank_accounts.account_name as account_name','bankers.name as bank_name','bank_accounts.account_type as account_type','bank_accounts.status as status',
+				        DB::raw('(select ifnull(sum(amount),0) from  bank_transactions where trans_type = 1 and bank_transactions.bank_account_id = bank_accounts.account_no) as deposits'),
+				        DB::raw('(select ifnull(sum(amount),0) from  bank_transactions where trans_type = 0 and bank_transactions.bank_account_id = bank_accounts.account_no) as withdrawals'),
+				        DB::raw('(select (deposits - withdrawals)) as ini_bal'))
+				        ->get();
+
+
+		$bankers = Banks::all();
+
+
+    	$payments = DB::table('payment_recieved')
+    			 ->join('bank_accounts','bank_accounts.account_no','=','payment_recieved.bank_account_no')
+                 ->selectRaw('bank_accounts.account_name,
+                 			  payment_recieved.Id,
+                              payment_recieved.date_recieved,
+                              payment_recieved.contribution_period,
+                              payment_recieved.amount_recieved,
+                              payment_recieved.id,
+                              payment_recieved.status')
+                 ->where('payment_recieved.status','=',[0])
+                 ->get();
+
+        $fi_investments = DB::table('fixed_deposit_investments')
+                 ->selectRaw('fixed_deposit_investments.value_date,
+                 			  fixed_deposit_investments.Id,
+                              fixed_deposit_investments.Investment_Amount as amount,
+                              fixed_deposit_investments.Interest_Rate as rate,
+                              fixed_deposit_investments.Tenor as tenor,
+                              fixed_deposit_investments.status')
+                 ->where('fixed_deposit_investments.status','=',[0])
+                 ->get();
+
+
+    	 return View::make('Accounts.pendingApprovals')
+    	 ->with('fi_investments',$fi_investments)
+    	 ->with('bankaccounts',$bankaccounts)
+    	 ->with('bankers',$bankers)
+    	 ->with('payments',$payments);
+
     }
 
 
@@ -149,6 +265,7 @@ class AccountsController extends Controller
         		
 			            $payment = new Payments;
 			           	$payment->date_recieved = Input::get('paymentdate');
+			           	$payment->bank_account_no = Input::get('bankaccountno');
 			           	$payment->contribution_period = Input::get('contributionperiod');
 			           	$payment->amount_recieved = Input::get('amount');
 			           	$payment->payment_method = Input::get('paymentmethod');
@@ -159,22 +276,12 @@ class AccountsController extends Controller
 			           	$payment->created_at = date('Y-m-d');
 			        
 
-			            if($payment->save() && $this->create_bank_transaction(Input::get('bankaccountno'),Input::get('paymentdate'),Input::get('amount'),'Payment recieved for P.F Contribution for the period '.Input::get('contributionperiod'),1,Input::get('paymentmethod'),Input::get('bankers'),Input::get('chequeno'),'N/A'))
+			            if($payment->save())
 			            {
-			            	$affectedRows = UploadHistory::where('Contribution_Period', '=', Input::get('contributionperiod'))  
-			                                ->update(array('Payment_Amount' => Input::get('amount'),
-			                                               'Updated_By' => Auth::user()->get_user_id(), 
-			                                               'Updated_At' => date('Y-m-d')));
-			    			if($affectedRows > 0)
-			    			{
+			            	
 			              		$ini = array('OK'=>'OK');
 			                    return  Response::json($ini);
-			                }
-			                else
-			                {
-			                	$ini = array('No Data'=>'Amount paid was not updated for the specified period');
-			                    return  Response::json($ini);
-			                }
+			               
 			            }
 			            else
 			            {               
@@ -192,6 +299,74 @@ class AccountsController extends Controller
             
         }
 	}
+
+	public function approvepayment()
+	{
+
+		$payment = DB::table('payment_recieved')->where('id','=',Input::get('paymentid'))->first();
+
+
+		 				if($this->create_bank_transaction($payment->bank_account_no,$payment->date_recieved,$payment->amount_recieved,'Payment recieved for P.F Contribution for the period '.$payment->contribution_period,1,$payment->payment_method,$payment->bankers_id,$payment->cheque_no,'N/A'))
+			            {
+			            	$affectedRows = UploadHistory::where('Contribution_Period', '=', $payment->contribution_period)  
+			                                ->update(array('Payment_Amount' => $payment->amount_recieved,
+			                                               'Updated_By' => Auth::user()->get_user_id(), 
+			                                               'Updated_At' => date('Y-m-d')));
+			    			if($affectedRows > 0)
+			    			{
+			    				$affected = Payments::where('Id', '=', $payment->id)  
+			                                ->update(array('status' => 1,
+			                                               'Updated_By' => Auth::user()->get_user_id(), 
+			                                               'Updated_At' => date('Y-m-d')));
+			    				if($affected >0)
+			    				{
+				              		$ini = array('OK'=>'OK');
+				                    return  Response::json($ini);
+			                	}
+			                	else
+			                	{
+			                		$ini = array('No Data'=>'Payment was not set active, please try again');
+			                    	return  Response::json($ini);
+			                	}
+			                }
+			                else
+			                {
+			                	$ini = array('No Data'=>'Amount paid was not updated for the specified period');
+			                    return  Response::json($ini);
+			                }
+			            }
+			            else
+			            {               
+			            		$ini = array('No Data'=>'Payment was not saved.');
+			                    return  Response::json($ini);
+			            }
+	}
+
+
+	public function disapprovepayment()
+	{
+
+		
+			    				$affected = Payments::where('Id', '=',Input::get('paymentid'))  
+			                              ->update(array('status' => 3,
+			                                             'Updated_By' => Auth::user()->get_user_id(), 
+			                                             'Updated_At' => date('Y-m-d')));
+
+			    				if($affected > 0)
+			    				{
+				              		$ini = array('OK'=>'OK');
+				                    return  Response::json($ini);
+			                	}
+			                	else
+			                	{
+			                		$ini = array('No Data'=>'Payment was not set active, please try again');
+			                    	return  Response::json($ini);
+			                	}
+
+	}
+
+
+
 
 
 
@@ -309,7 +484,6 @@ class AccountsController extends Controller
 	{
 	    $bankaccounts = DB::table('bank_accounts')
         ->join('bankers','bankers.id','=','bank_accounts.bank_id')
-      
         ->select('bank_accounts.id as id','bank_accounts.account_no as account_no','bank_accounts.account_name as account_name','bankers.name as bank_name','bank_accounts.account_type as account_type','bank_accounts.status as status',
         DB::raw('(select ifnull(sum(amount),0) from  bank_transactions where trans_type = 1 and bank_transactions.bank_account_id = bank_accounts.account_no) as deposits'),
         DB::raw('(select ifnull(sum(amount),0) from  bank_transactions where trans_type = 0 and bank_transactions.bank_account_id = bank_accounts.account_no) as withdrawals'),

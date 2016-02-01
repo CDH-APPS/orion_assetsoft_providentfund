@@ -37,7 +37,7 @@
                                     <?php if(true){ ?>
                                     <div class="x_panel">
                                         
-                                        <a class="btn btn-primary btn-xs" data-toggle="modal" href="#addpayment">Add Payment</a>   
+                                        <a class="btn btn-primary btn-xs" data-toggle="modal" href="#addpayment">Recieve New Payment</a>   
 
                                     </div>
                                     <?php } ?>
@@ -54,8 +54,9 @@
                                                 <th>Date Recieved</th>
                                                 <th>Contribution Period </th>
                                                 <th>Amount Recieved</th>
+                                                <th>Recieving Bank Account</th>
                                                 <th>Status</th>
-                                                <th></th>
+                                            
                                                
                                               
                                                 </th>
@@ -70,32 +71,22 @@
                                                 <td class=" ">{{ $payment->date_recieved }}</td>
                                                 <td class=" ">{{ $payment->contribution_period }}</td>
                                                 <td class=" ">{{ number_format($payment->amount_recieved,2) }}</td>
-                                    
+                                                <td class=" ">{{ $payment->account_name }}</td>
                                                 <td class=" ">
-                                                @if($payment->Status == '1')
-                                                <a class="btn btn-success btn-xs" href="{{ URL::route('ViewContributions', array('id' => $payment->Id )) }}">
+                                                @if($payment->status == '1')
+                                                <a class="btn btn-success btn-xs" href="">
                                                     Processed
                                                 </a>
-                                                @else
-                                                <a class="btn btn-danger btn-xs" href="{{ URL::route('ViewContributions', array('id' => $payment->Id )) }}">
+                                                @elseif($payment->status == '0')
+                                                <a class="btn btn-danger btn-xs" href="">
                                                     Pending
+                                                </a>
+                                                @elseif($payment->status == '3')
+                                                <a class="btn btn-danger btn-xs" href="">
+                                                    Disapproved
                                                 </a>
                                                 @endif
                                                 </td>
-
-                                                <td class=" ">
-                                                    
-                                                    @if($payment->Status == '1')
-                                                    
-                                                    @else
-                                                    <a data-toggle="modal" class="btn btn-primary btn-xs" href="#movetoBank">
-                                                        Move to Bank
-                                                    </a>
-                                                    @endif
-
-                                                </td>
-                                                
-
                                                                                                                             
                                             </tr>
                                             @endforeach

@@ -375,9 +375,11 @@ class OperationsController extends Controller
                               fixed_deposit_investments.Principal_Bal,
                               fixed_deposit_investments.Interest_Rate,
                               fixed_deposit_investments.Tenor,
+                              fixed_deposit_investments.Status,
                               (to_days(now()) - to_days(fixed_deposit_investments.Value_Date)) as Age,
                               (((fixed_deposit_investments.Principal_Bal * (fixed_deposit_investments.Interest_Rate / 100))/fixed_deposit_investments.Basis)) * (to_days(now()) - to_days(fixed_deposit_investments.Last_Trans_Date)) as Interest_Acrued,
                               (((fixed_deposit_investments.Principal_Bal * (fixed_deposit_investments.Interest_Rate / 100))/fixed_deposit_investments.Basis)) * (to_days(now()) - to_days(fixed_deposit_investments.Last_Trans_Date)) + (fixed_deposit_investments.Principal_Bal) + (fixed_deposit_investments.Interest_Bal) as Outstanding_Bal')
+                 ->where('fixed_deposit_investments.Maturity_Date','>',date('Y-m-d'))
                  ->get();
       
      
@@ -399,9 +401,11 @@ class OperationsController extends Controller
                               equity_investments.Amount_Paid,
                               equity_investments.Offer_Price,
                               equity_investments.No_Of_Shares,
+                              equity_investments.status,
                               (select equities.Offer_Price from equities where equities.Share_Code = equity_investments.Share_Code) as Current_Price,
                               (equity_investments.No_Of_Shares * (select equities.Offer_Price from equities where equities.Share_Code = equity_investments.Share_Code)) as Current_Balance,
-                              (equity_investments.Amount_Paid - (equity_investments.No_Of_Shares * (select equities.Offer_Price from equities where equities.Share_Code = equity_investments.Share_Code))) as Gain_Loss')
+                              ((equity_investments.No_Of_Shares * (select equities.Offer_Price from equities where equities.Share_Code = equity_investments.Share_Code)) - equity_investments.Amount_Paid ) as Gain_Loss')
+                 ->where('equity_investments.maturity_date','>',date('Y-m-d'))
                  ->get();
       
      

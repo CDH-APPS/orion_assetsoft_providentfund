@@ -52,7 +52,7 @@
                                     <table id="example" class="table table-striped responsive-utilities jambo_table">
                                         <thead>
                                             <tr class="headings">    
-                                                <th>Account No.</th>
+                                                
                                                 <th>Value Date</th>
                                                 <th>Maturity Date </th>
                                                 <th>Principal Bal.</th>
@@ -61,6 +61,7 @@
                                                 <th>Age</th>
                                                 <th>Interest Acrued</th>
                                                 <th>Outstd. Bal.</th>
+                                                <th></th>
                                                 
                                             </tr>
                                         </thead>
@@ -68,11 +69,7 @@
                                         <tbody>
                                             @foreach($accts as $accounts)
                                             <tr class="even pointer">
-                                                <td class=" ">
-                                                <a href="#">
-                                                {{ $accounts->Investment_Id }}
-                                                </a>
-                                                </td>
+                                                
                                                 <td class=" ">{{ $accounts->Value_Date }}</td>
                                                 <td class=" ">{{ $accounts->Maturity_Date }}</td>
                                                 <td class=" ">{{ number_format($accounts->Principal_Bal,2) }}</td>
@@ -80,7 +77,18 @@
                                                 <td class=" ">{{ $accounts->Tenor }}</td> 
                                                 <td class=" ">{{ $accounts->Age }}</td> 
                                                 <td class=" ">{{ number_format($accounts->Interest_Acrued,2) }}</td> 
-                                                <td class=" ">{{ number_format($accounts->Outstanding_Bal,2) }}</td>                                                                                  
+                                                <td class=" ">{{ number_format($accounts->Outstanding_Bal,2) }}</td>   
+                                                <td class=" ">
+                                                @if($accounts->Status == 0)
+                                                <a style="width:90px" class="btn btn-danger btn-xs" href="">
+                                                   Pending
+                                                </a>
+                                                @elseif($accounts->Status == '1')
+                                                <a style="width:90px" class="btn btn-success btn-xs" href="">
+                                                    Active
+                                                </a>
+                                                @endif
+                                                </td>                                                                                  
                                             </tr>
                                             @endforeach
                                             

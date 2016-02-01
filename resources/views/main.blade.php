@@ -137,6 +137,8 @@
                                         </li>
                                         <li><a href="/ProcessPayments">Process Payments Received</a>
                                         </li>
+                                        <li><a href="/AccountsPendingApprovals">Pending Approvals</a>
+                                        </li>
                                         <li><a href="/ProcessWithdrawals">Process Withdrawals</a>
                                         </li>
                                          <li><a href="/StaffAccounts">Staff Accounts</a>
